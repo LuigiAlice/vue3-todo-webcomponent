@@ -1,0 +1,16 @@
+{
+  "name": "vue3-todo-webcomponent",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "vite": "^5.0.0"
+  }
+}

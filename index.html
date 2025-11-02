@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo Webcomponent</title>
+</head>
+<body>
+<todo-app id="myTodo" todos-data='[{"id":1,"text":"Beispiel 1","completed":false},{"id":2,"text":"Beispiel 2","completed":true}]'
+></todo-app>
+<script>
+  const todo = document.getElementById('myTodo');
+  todo.addEventListener('update:todosData', ev => {
+    console.log('Todos:', JSON.parse(ev.detail));
+  });
+</script>
+  <script type="module" src="./dist/todo-component.mjs"></script>
+</body>
+</html>
