@@ -11,6 +11,7 @@
           class="input-field"
       />
       <button @click="addTodo" class="btn btn-add">Hinzufügen</button>
+      <button @click="openJsonModal" class="btn btn-import">JSON bearbeiten</button>
     </div>
 
     <div class="todo-filters">
@@ -45,6 +46,19 @@
 
     <div v-if="todos.length > 0" class="todo-stats">
       {{ remainingCount }} {{ remainingCount === 1 ? 'Aufgabe' : 'Aufgaben' }} übrig
+    </div>
+    <!-- JSON Modal -->
+    <div v-if="showJsonModal" class="modal-backdrop">
+      <div class="modal">
+        <h3>Todos als JSON</h3>
+        <textarea v-model="jsonText" class="json-textarea" spellcheck="false"></textarea>
+        <div class="modal-actions">
+          <button @click="applyJson" class="btn btn-apply">Anwenden</button>
+          <button @click="copyJsonToClipboard" class="btn btn-copy">Kopieren</button>
+          <button @click="closeJsonModal" class="btn btn-close">Schließen</button>
+        </div>
+        <div v-if="modalMessage" class="modal-message">{{ modalMessage }}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -103,6 +117,71 @@ const addTodo = () => {
       completed: false
     });
     newTodo.value = '';
+  }
+};
+
+// Modal state for JSON editor
+const showJsonModal = ref(false);
+const jsonText = ref('');
+const modalMessage = ref('');
+
+const openJsonModal = () => {
+  modalMessage.value = '';
+  try {
+    jsonText.value = JSON.stringify(todos.value, null, 2);
+  } catch (e) {
+    jsonText.value = '[]';
+  }
+  showJsonModal.value = true;
+};
+
+const closeJsonModal = () => {
+  showJsonModal.value = false;
+};
+
+const applyJson = () => {
+  modalMessage.value = '';
+  try {
+    const parsed = JSON.parse(jsonText.value);
+    if (!Array.isArray(parsed)) {
+      modalMessage.value = 'Erwartet ein JSON-Array von Todos.';
+      return;
+    }
+
+    const normalized = parsed.map((item, idx) => {
+      const obj = typeof item === 'object' && item !== null ? item : { text: String(item) };
+      return {
+        id: obj.id || Date.now() + idx,
+        text: obj.text != null ? String(obj.text) : '',
+        completed: Boolean(obj.completed)
+      };
+    }).filter(t => t.text.trim() !== '');
+
+    if (normalized.length === 0) {
+      modalMessage.value = 'Keine gültigen Todos gefunden (keine Text-Felder).';
+      return;
+    }
+
+    todos.value = normalized;
+    modalMessage.value = `Angewendet: ${normalized.length} Todo(s) gesetzt.`;
+    jsonText.value = JSON.stringify(todos.value, null, 2);
+  } catch (err) {
+    modalMessage.value = 'Ungültiges JSON: ' + (err && err.message ? err.message : 'Parsing-Fehler');
+  }
+};
+
+const copyJsonToClipboard = async () => {
+  modalMessage.value = '';
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    modalMessage.value = 'Ihr Browser unterstützt das Clipboard-API nicht.';
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(jsonText.value);
+    modalMessage.value = 'JSON kopiert.';
+  } catch (err) {
+    console.error(err);
+    modalMessage.value = 'Fehler beim Kopieren in die Zwischenablage.';
   }
 };
 
@@ -311,4 +390,51 @@ h2 {
     width: 100%;
   }
 }
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.json-textarea {
+  width: 95%;
+  height: 300px;
+  font-family: monospace;
+  font-size: 13px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin: 10px 0;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-message {
+  margin-top: 10px;
+  color: #666;
+}
+
+.btn-apply { background: #42b983; color: white; }
+.btn-copy { background: #2c3e50; color: white; }
+.btn-close { background: #e0e0e0; }
 </style>
