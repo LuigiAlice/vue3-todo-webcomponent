@@ -1,6 +1,6 @@
 <template>
-  <div class="todo-app">
-    <h2>{{ title }}</h2>
+  <div class="todo-app" data-testid="todo-app">
+    <h2 data-testid="app-title">{{ title }}</h2>
 
     <div class="todo-input">
       <input
@@ -9,9 +9,10 @@
           type="text"
           placeholder="Was möchten Sie erledigen?"
           class="input-field"
+          data-testid="todo-input"
       />
-      <button @click="addTodo" class="btn btn-add">Hinzufügen</button>
-      <button @click="openJsonModal" class="btn btn-import">JSON bearbeiten</button>
+      <button @click="addTodo" class="btn btn-add" data-testid="btn-add">Hinzufügen</button>
+      <button @click="openJsonModal" class="btn btn-import" data-testid="btn-import">JSON bearbeiten</button>
     </div>
 
     <div class="todo-filters">
@@ -20,44 +21,47 @@
           :key="filter.value"
           @click="currentFilter = filter.value"
           :class="['btn-filter', { active: currentFilter === filter.value }]"
+          :data-testid="`filter-${filter.value}`"
       >
         {{ filter.label }}
       </button>
     </div>
 
-    <ul class="todo-list">
+    <ul class="todo-list" data-testid="todo-list">
       <li
           v-for="todo in filteredTodos"
           :key="todo.id"
           :class="['todo-item', { completed: todo.completed }]"
+          :data-testid="`todo-item-${todo.id}`"
       >
         <input
             type="checkbox"
             :checked="todo.completed"
             @change="toggleTodo(todo.id)"
             class="todo-checkbox"
+            :data-testid="`todo-checkbox-${todo.id}`"
         />
-        <span class="todo-text">{{ todo.text }}</span>
-        <button @click="removeTodo(todo.id)" class="btn btn-delete">
+        <span class="todo-text" :data-testid="`todo-text-${todo.id}`">{{ todo.text }}</span>
+        <button @click="removeTodo(todo.id)" class="btn btn-delete" :data-testid="`btn-delete-${todo.id}`">
           ✕
         </button>
       </li>
     </ul>
 
-    <div v-if="todos.length > 0" class="todo-stats">
+    <div v-if="todos.length > 0" class="todo-stats" data-testid="todo-stats">
       {{ remainingCount }} {{ remainingCount === 1 ? 'Aufgabe' : 'Aufgaben' }} übrig
     </div>
     <!-- JSON Modal -->
-    <div v-if="showJsonModal" class="modal-backdrop">
-      <div class="modal">
+    <div v-if="showJsonModal" class="modal-backdrop" data-testid="modal-backdrop">
+      <div class="modal" data-testid="modal">
         <h3>Todos als JSON</h3>
-        <textarea v-model="jsonText" class="json-textarea" spellcheck="false"></textarea>
+        <textarea v-model="jsonText" class="json-textarea" spellcheck="false" data-testid="json-textarea"></textarea>
         <div class="modal-actions">
-          <button @click="applyJson" class="btn btn-apply">Anwenden</button>
-          <button @click="copyJsonToClipboard" class="btn btn-copy">Kopieren</button>
-          <button @click="closeJsonModal" class="btn btn-close">Schließen</button>
+          <button @click="applyJson" class="btn btn-apply" data-testid="btn-apply">Anwenden</button>
+          <button @click="copyJsonToClipboard" class="btn btn-copy" data-testid="btn-copy">Kopieren</button>
+          <button @click="closeJsonModal" class="btn btn-close" data-testid="btn-close">Schließen</button>
         </div>
-        <div v-if="modalMessage" class="modal-message">{{ modalMessage }}</div>
+        <div v-if="modalMessage" class="modal-message" data-testid="modal-message">{{ modalMessage }}</div>
       </div>
     </div>
   </div>
