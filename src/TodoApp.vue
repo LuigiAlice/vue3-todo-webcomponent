@@ -190,7 +190,9 @@ const copyJsonToClipboard = async () => {
 };
 
 const removeTodo = (id) => {
-  todos.value = todos.value.filter(todo => todo.id !== id);
+  if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) {
+    todos.value = todos.value.filter(todo => todo.id !== id);
+  }
 };
 
 const toggleTodo = (id) => {

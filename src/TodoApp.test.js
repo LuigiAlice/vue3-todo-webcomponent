@@ -8,6 +8,8 @@ describe('TodoApp.vue', () => {
   beforeEach(() => {
     // Lokalem Storage vor jedem Test leeren
     localStorage.clear();
+    // window.confirm mocken
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     wrapper = mount(TodoApp, {
       props: {
         title: 'Test Aufgaben',
@@ -19,6 +21,7 @@ describe('TodoApp.vue', () => {
   afterEach(() => {
     wrapper.unmount();
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   describe('Rendering', () => {
@@ -86,6 +89,26 @@ describe('TodoApp.vue', () => {
       await deleteButton.trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(0);
+    });
+
+    it('sollte ein Todo nicht löschen, wenn Bestätigung abgelehnt wird', async () => {
+      // Erst ein Todo hinzufügen
+      const input = wrapper.find('[data-testid="todo-input"]');
+      await input.setValue('Zu schützende Aufgabe');
+      await wrapper.find('[data-testid="btn-add"]').trigger('click');
+
+      expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
+
+      // window.confirm auf false setzen
+      window.confirm.mockReturnValue(false);
+
+      // Löschen versuchen
+      const deleteButton = wrapper.find('[data-testid^="btn-delete-"]');
+      await deleteButton.trigger('click');
+
+      // Todo sollte noch da sein
+      expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
+      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Zu schützende Aufgabe');
     });
 
     it('sollte ein Todo abhaken können', async () => {
