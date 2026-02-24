@@ -6,7 +6,8 @@
   <title>Todo Webcomponent</title>
 </head>
 <body>
-<todo-app id="myTodo"></todo-app>
+<!-- Sprache über das lang-Attribut setzen: lang="de" (Standard) oder lang="en" -->
+<todo-app id="myTodo" lang="de"></todo-app>
 <script>
   const todo = document.getElementById('myTodo');
   todo.addEventListener('update:todosData', ev => {

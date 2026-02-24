@@ -1,18 +1,28 @@
 <template>
   <div class="todo-app" data-testid="todo-app">
-    <h2 data-testid="app-title">{{ title }}</h2>
+    <div class="app-header">
+      <h2 data-testid="app-title">{{ appTitle }}</h2>
+      <button
+        @click="toggleLang"
+        class="btn-lang"
+        data-testid="btn-lang"
+        :title="currentLang === 'de' ? 'Switch to English' : 'Zu Deutsch wechseln'"
+      >
+        {{ currentLang === 'de' ? '🇬🇧 EN' : '🇩🇪 DE' }}
+      </button>
+    </div>
 
     <div class="todo-input">
       <input
           v-model="newTodo"
           @keyup.enter="addTodo"
           type="text"
-          placeholder="Was möchten Sie erledigen?"
+          :placeholder="t('placeholder')"
           class="input-field"
           data-testid="todo-input"
       />
-      <button @click="addTodo" class="btn btn-add" data-testid="btn-add">Hinzufügen</button>
-      <button @click="openJsonModal" class="btn btn-import" data-testid="btn-import">JSON bearbeiten</button>
+      <button @click="addTodo" class="btn btn-add" data-testid="btn-add">{{ t('btnAdd') }}</button>
+      <button @click="openJsonModal" class="btn btn-import" data-testid="btn-import">{{ t('btnImport') }}</button>
     </div>
 
     <div class="todo-filters">
@@ -49,17 +59,18 @@
     </ul>
 
     <div v-if="todos.length > 0" class="todo-stats" data-testid="todo-stats">
-      {{ remainingCount }} {{ remainingCount === 1 ? 'Aufgabe' : 'Aufgaben' }} übrig
+      {{ t('remaining')(remainingCount) }}
     </div>
+
     <!-- JSON Modal -->
     <div v-if="showJsonModal" class="modal-backdrop" data-testid="modal-backdrop">
       <div class="modal" data-testid="modal">
-        <h3>Todos als JSON</h3>
+        <h3>{{ t('modalTitle') }}</h3>
         <textarea v-model="jsonText" class="json-textarea" spellcheck="false" data-testid="json-textarea"></textarea>
         <div class="modal-actions">
-          <button @click="applyJson" class="btn btn-apply" data-testid="btn-apply">Anwenden</button>
-          <button @click="copyJsonToClipboard" class="btn btn-copy" data-testid="btn-copy">Kopieren</button>
-          <button @click="closeJsonModal" class="btn btn-close" data-testid="btn-close">Schließen</button>
+          <button @click="applyJson" class="btn btn-apply" data-testid="btn-apply">{{ t('btnApply') }}</button>
+          <button @click="copyJsonToClipboard" class="btn btn-copy" data-testid="btn-copy">{{ t('btnCopy') }}</button>
+          <button @click="closeJsonModal" class="btn btn-close" data-testid="btn-close">{{ t('btnClose') }}</button>
         </div>
         <div v-if="modalMessage" class="modal-message" data-testid="modal-message">{{ modalMessage }}</div>
       </div>
@@ -68,12 +79,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, defineEmits, defineProps } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import de from './i18n/de.js';
+import en from './i18n/en.js';
+
+const translations = { de, en };
 
 const props = defineProps({
   title: {
     type: String,
-    default: 'Meine Aufgaben'
+    default: ''
   },
   storageKey: {
     type: String,
@@ -82,20 +97,40 @@ const props = defineProps({
   todosData: {
     type: String,
     default: '[]'
+  },
+  lang: {
+    type: String,
+    default: 'de',
+    validator: (val) => ['de', 'en'].includes(val)
   }
 });
 
 const emit = defineEmits(['update:todosData']);
 
+// Language state – initialized from prop, can be toggled interactively
+const currentLang = ref(props.lang);
+
+const t = (key) => {
+  const locale = translations[currentLang.value] || translations['de'];
+  return locale[key] ?? key;
+};
+
+const toggleLang = () => {
+  currentLang.value = currentLang.value === 'de' ? 'en' : 'de';
+};
+
+// Computed title: use prop if provided, otherwise fall back to translation
+const appTitle = computed(() => props.title || t('title'));
+
 const newTodo = ref('');
 const todos = ref([]);
 const currentFilter = ref('all');
 
-const filters = [
-  { label: 'Alle', value: 'all' },
-  { label: 'Aktiv', value: 'active' },
-  { label: 'Erledigt', value: 'completed' }
-];
+const filters = computed(() => [
+  { label: t('filterAll'), value: 'all' },
+  { label: t('filterActive'), value: 'active' },
+  { label: t('filterCompleted'), value: 'completed' }
+]);
 
 const filteredTodos = computed(() => {
   switch (currentFilter.value) {
@@ -148,7 +183,7 @@ const applyJson = () => {
   try {
     const parsed = JSON.parse(jsonText.value);
     if (!Array.isArray(parsed)) {
-      modalMessage.value = 'Erwartet ein JSON-Array von Todos.';
+      modalMessage.value = t('errorNotArray');
       return;
     }
 
@@ -162,35 +197,35 @@ const applyJson = () => {
     }).filter(t => t.text.trim() !== '');
 
     if (normalized.length === 0) {
-      modalMessage.value = 'Keine gültigen Todos gefunden (keine Text-Felder).';
+      modalMessage.value = t('errorNoValidTodos');
       return;
     }
 
     todos.value = normalized;
-    modalMessage.value = `Angewendet: ${normalized.length} Todo(s) gesetzt.`;
+    modalMessage.value = t('successApplied')(normalized.length);
     jsonText.value = JSON.stringify(todos.value, null, 2);
   } catch (err) {
-    modalMessage.value = 'Ungültiges JSON: ' + (err && err.message ? err.message : 'Parsing-Fehler');
+    modalMessage.value = t('errorInvalidJson') + (err && err.message ? err.message : 'Parsing-Fehler');
   }
 };
 
 const copyJsonToClipboard = async () => {
   modalMessage.value = '';
   if (!navigator.clipboard || !navigator.clipboard.writeText) {
-    modalMessage.value = 'Ihr Browser unterstützt das Clipboard-API nicht.';
+    modalMessage.value = t('errorNoClipboard');
     return;
   }
   try {
     await navigator.clipboard.writeText(jsonText.value);
-    modalMessage.value = 'JSON kopiert.';
+    modalMessage.value = t('successCopied');
   } catch (err) {
     console.error(err);
-    modalMessage.value = 'Fehler beim Kopieren in die Zwischenablage.';
+    modalMessage.value = t('errorCopy');
   }
 };
 
 const removeTodo = (id) => {
-  if (window.confirm('Möchten Sie diesen Eintrag wirklich löschen?')) {
+  if (window.confirm(t('confirmDelete'))) {
     todos.value = todos.value.filter(todo => todo.id !== id);
   }
 };
@@ -219,19 +254,16 @@ const loadTodos = () => {
 
 onMounted(() => {
   try {
-    // Wenn todosData gesetzt ist und nicht leer, lade aus diesem JSON-String
     if (props.todosData && props.todosData !== '[]') {
       todos.value = JSON.parse(props.todosData);
     } else {
-      loadTodos(); // ansonsten aus localStorage laden
+      loadTodos();
     }
   } catch {
     todos.value = [];
   }
 });
 
-// Prop turtlesData nicht direkt überschreiben, sondern lokale todos bearbeiten
-// und Änderungen per Event kommunizieren
 watch(
     todos,
     () => {
@@ -253,10 +285,37 @@ watch(
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+
 h2 {
-  margin: 0 0 20px 0;
+  margin: 0;
   color: #2c3e50;
   text-align: center;
+}
+
+.btn-lang {
+  position: absolute;
+  right: 0;
+  padding: 6px 10px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-lang:hover {
+  border-color: #42b983;
+  background: #f0faf5;
 }
 
 .todo-input {

@@ -40,12 +40,16 @@ describe('TodoApp.vue', () => {
       expect(wrapper.find('[data-testid="btn-import"]').exists()).toBe(true);
     });
 
-    it('sollte Filter-Buttons anzeigen', () => {
+    it('sollte Filter-Buttons anzeigen (Deutsch)', () => {
       const filterButtons = wrapper.findAll('[data-testid^="filter-"]');
       expect(filterButtons).toHaveLength(3);
       expect(filterButtons[0].text()).toBe('Alle');
       expect(filterButtons[1].text()).toBe('Aktiv');
       expect(filterButtons[2].text()).toBe('Erledigt');
+    });
+
+    it('sollte den Sprachumschalter-Button anzeigen', () => {
+      expect(wrapper.find('[data-testid="btn-lang"]').exists()).toBe(true);
     });
   });
 
@@ -262,6 +266,69 @@ describe('TodoApp.vue', () => {
       const newWrapper = mount(TodoApp);
       expect(newWrapper.find('[data-testid="app-title"]').text()).toBe('Meine Aufgaben');
       newWrapper.unmount();
+    });
+
+    it('sollte das lang-Prop akzeptieren und englische Texte anzeigen', () => {
+      const newWrapper = mount(TodoApp, {
+        props: { lang: 'en' }
+      });
+      expect(newWrapper.find('[data-testid="app-title"]').text()).toBe('My Tasks');
+      const filterButtons = newWrapper.findAll('[data-testid^="filter-"]');
+      expect(filterButtons[0].text()).toBe('All');
+      expect(filterButtons[1].text()).toBe('Active');
+      expect(filterButtons[2].text()).toBe('Completed');
+      newWrapper.unmount();
+    });
+  });
+
+  describe('i18n – Sprachumschalter', () => {
+    it('sollte standardmäßig Deutsch anzeigen', () => {
+      expect(wrapper.find('[data-testid="btn-add"]').text()).toBe('Hinzufügen');
+      expect(wrapper.find('[data-testid="btn-import"]').text()).toBe('JSON bearbeiten');
+    });
+
+    it('sollte nach Klick auf Sprachumschalter Englisch anzeigen', async () => {
+      const langBtn = wrapper.find('[data-testid="btn-lang"]');
+      await langBtn.trigger('click');
+
+      expect(wrapper.find('[data-testid="btn-add"]').text()).toBe('Add');
+      expect(wrapper.find('[data-testid="btn-import"]').text()).toBe('Edit JSON');
+      const filterButtons = wrapper.findAll('[data-testid^="filter-"]');
+      expect(filterButtons[0].text()).toBe('All');
+    });
+
+    it('sollte nach zweimaligem Klick wieder Deutsch anzeigen', async () => {
+      const langBtn = wrapper.find('[data-testid="btn-lang"]');
+      await langBtn.trigger('click');
+      await langBtn.trigger('click');
+
+      expect(wrapper.find('[data-testid="btn-add"]').text()).toBe('Hinzufügen');
+    });
+
+    it('sollte englische Statistiken anzeigen', async () => {
+      const langBtn = wrapper.find('[data-testid="btn-lang"]');
+      await langBtn.trigger('click');
+
+      const input = wrapper.find('[data-testid="todo-input"]');
+      await input.setValue('Test task');
+      await wrapper.find('[data-testid="btn-add"]').trigger('click');
+
+      const stats = wrapper.find('[data-testid="todo-stats"]');
+      expect(stats.text()).toContain('1 task remaining');
+    });
+
+    it('sollte englische Statistiken im Plural anzeigen', async () => {
+      const langBtn = wrapper.find('[data-testid="btn-lang"]');
+      await langBtn.trigger('click');
+
+      const input = wrapper.find('[data-testid="todo-input"]');
+      await input.setValue('Task 1');
+      await wrapper.find('[data-testid="btn-add"]').trigger('click');
+      await input.setValue('Task 2');
+      await wrapper.find('[data-testid="btn-add"]').trigger('click');
+
+      const stats = wrapper.find('[data-testid="todo-stats"]');
+      expect(stats.text()).toContain('2 tasks remaining');
     });
   });
 
