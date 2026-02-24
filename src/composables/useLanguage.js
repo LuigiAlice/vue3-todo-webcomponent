@@ -1,23 +1,23 @@
 import { ref } from 'vue';
 
 /**
- * Composable für Sprachwechsel-Logik
- * @param {string} initialLang - Initiale Sprache
- * @returns {Object} Sprach-Composable mit toggle-Funktion
+ * Composable for language switching logic
+ * @param {string} initialLang - Initial language
+ * @returns {Object} Language composable with toggle function
  */
 export function useLanguage(initialLang = 'de') {
   const currentLang = ref(initialLang);
 
   /**
-   * Wechselt zwischen den verfügbaren Sprachen
+   * Toggles between available languages
    */
   const toggleLang = () => {
     currentLang.value = currentLang.value === 'de' ? 'en' : 'de';
   };
 
   /**
-   * Setzt die Sprache explizit
-   * @param {string} lang - Sprachcode ('de' oder 'en')
+   * Sets the language explicitly
+   * @param {string} lang - Language code ('de' or 'en')
    */
   const setLang = (lang) => {
     if (['de', 'en'].includes(lang)) {

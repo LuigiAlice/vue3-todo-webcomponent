@@ -6,13 +6,13 @@ describe('TodoApp.vue', () => {
   let wrapper;
 
   beforeEach(() => {
-    // Lokalem Storage vor jedem Test leeren
+    // Clear local storage before each test
     localStorage.clear();
-    // window.confirm mocken
+    // Mock window.confirm
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     wrapper = mount(TodoApp, {
       props: {
-        title: 'Test Aufgaben',
+        title: 'Test Tasks',
         storageKey: 'test-todos'
       }
     });
@@ -25,22 +25,22 @@ describe('TodoApp.vue', () => {
   });
 
   describe('Rendering', () => {
-    it('sollte die Komponente korrekt rendern', () => {
+    it('should render the component correctly', () => {
       expect(wrapper.exists()).toBe(true);
       expect(wrapper.find('[data-testid="todo-app"]').exists()).toBe(true);
     });
 
-    it('sollte den Titel anzeigen', () => {
-      expect(wrapper.find('[data-testid="app-title"]').text()).toBe('Test Aufgaben');
+    it('should display the title', () => {
+      expect(wrapper.find('[data-testid="app-title"]').text()).toBe('Test Tasks');
     });
 
-    it('sollte Input-Feld und Buttons enthalten', () => {
+    it('should contain input field and buttons', () => {
       expect(wrapper.find('[data-testid="todo-input"]').exists()).toBe(true);
       expect(wrapper.find('[data-testid="btn-add"]').exists()).toBe(true);
       expect(wrapper.find('[data-testid="btn-import"]').exists()).toBe(true);
     });
 
-    it('sollte Filter-Buttons anzeigen (Deutsch)', () => {
+    it('should display filter buttons (German)', () => {
       const filterButtons = wrapper.findAll('[data-testid^="filter-"]');
       expect(filterButtons).toHaveLength(3);
       expect(filterButtons[0].text()).toBe('Alle');
@@ -48,80 +48,80 @@ describe('TodoApp.vue', () => {
       expect(filterButtons[2].text()).toBe('Erledigt');
     });
 
-    it('sollte den Sprachumschalter-Button anzeigen', () => {
+    it('should display the language switch button', () => {
       expect(wrapper.find('[data-testid="btn-lang"]').exists()).toBe(true);
     });
   });
 
-  describe('Todo-Verwaltung', () => {
-    it('sollte ein Todo hinzufügen können', async () => {
+  describe('Todo Management', () => {
+    it('should be able to add a todo', async () => {
       const input = wrapper.find('[data-testid="todo-input"]');
-      await input.setValue('Neue Aufgabe');
+      await input.setValue('New Task');
       
       const addButton = wrapper.find('[data-testid="btn-add"]');
       await addButton.trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
-      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Neue Aufgabe');
+      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('New Task');
     });
 
-    it('sollte ein Todo mit Enter-Taste hinzufügen', async () => {
+    it('should add a todo with Enter key', async () => {
       const input = wrapper.find('[data-testid="todo-input"]');
-      await input.setValue('Aufgabe via Enter');
+      await input.setValue('Task via Enter');
       await input.trigger('keyup.enter');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
     });
 
-    it('sollte kein leeres Todo hinzufügen', async () => {
+    it('should not add an empty todo', async () => {
       const addButton = wrapper.find('[data-testid="btn-add"]');
       await addButton.trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(0);
     });
 
-    it('sollte ein Todo entfernen können', async () => {
-      // Erst ein Todo hinzufügen
+    it('should be able to remove a todo', async () => {
+      // First add a todo
       const input = wrapper.find('[data-testid="todo-input"]');
-      await input.setValue('Zu löschende Aufgabe');
+      await input.setValue('Task to delete');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
 
-      // Dann löschen
+      // Then delete
       const deleteButton = wrapper.find('[data-testid^="btn-delete-"]');
       await deleteButton.trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(0);
     });
 
-    it('sollte ein Todo nicht löschen, wenn Bestätigung abgelehnt wird', async () => {
-      // Erst ein Todo hinzufügen
+    it('should not delete a todo if confirmation is denied', async () => {
+      // First add a todo
       const input = wrapper.find('[data-testid="todo-input"]');
-      await input.setValue('Zu schützende Aufgabe');
+      await input.setValue('Task to protect');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
 
-      // window.confirm auf false setzen
+      // Set window.confirm to false
       window.confirm.mockReturnValue(false);
 
-      // Löschen versuchen
+      // Try to delete
       const deleteButton = wrapper.find('[data-testid^="btn-delete-"]');
       await deleteButton.trigger('click');
 
-      // Todo sollte noch da sein
+      // Todo should still be there
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
-      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Zu schützende Aufgabe');
+      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Task to protect');
     });
 
-    it('sollte ein Todo abhaken können', async () => {
-      // Todo hinzufügen
+    it('should be able to check off a todo', async () => {
+      // Add todo
       const input = wrapper.find('[data-testid="todo-input"]');
-      await input.setValue('Zu erledigende Aufgabe');
+      await input.setValue('Task to complete');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
 
-      // Abhaken
+      // Check off
       const checkbox = wrapper.find('[data-testid^="todo-checkbox-"]');
       await checkbox.setValue(true);
 
@@ -130,57 +130,57 @@ describe('TodoApp.vue', () => {
     });
   });
 
-  describe('Filterfunktionalität', () => {
+  describe('Filter Functionality', () => {
     beforeEach(async () => {
-      // Mehrere Todos hinzufügen
+      // Add multiple todos
       const input = wrapper.find('[data-testid="todo-input"]');
       
-      await input.setValue('Aufgabe 1');
+      await input.setValue('Task 1');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
       
-      await input.setValue('Aufgabe 2');
+      await input.setValue('Task 2');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
       
-      // Erste als erledigt markieren
+      // Mark first as completed
       const checkboxes = wrapper.findAll('[data-testid^="todo-checkbox-"]');
       await checkboxes[0].setValue(true);
     });
 
-    it('sollte alle Todos im "Alle"-Filter zeigen', async () => {
+    it('should show all todos in "All" filter', async () => {
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(2);
     });
 
-    it('sollte nur aktive Todos im "Aktiv"-Filter zeigen', async () => {
+    it('should show only active todos in "Active" filter', async () => {
       const filterButton = wrapper.find('[data-testid="filter-active"]');
       await filterButton.trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
-      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Aufgabe 2');
+      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Task 2');
     });
 
-    it('sollte nur erledigte Todos im "Erledigt"-Filter zeigen', async () => {
+    it('should show only completed todos in "Completed" filter', async () => {
       const filterButton = wrapper.find('[data-testid="filter-completed"]');
       await filterButton.trigger('click');
 
       expect(wrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
-      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Aufgabe 1');
+      expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Task 1');
     });
   });
 
-  describe('Statistiken', () => {
-    it('sollte die Anzahl der übrigen Aufgaben anzeigen', async () => {
+  describe('Statistics', () => {
+    it('should display the number of remaining tasks', async () => {
       const input = wrapper.find('[data-testid="todo-input"]');
       
-      await input.setValue('Aufgabe 1');
+      await input.setValue('Task 1');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
       
-      await input.setValue('Aufgabe 2');
+      await input.setValue('Task 2');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
 
       let stats = wrapper.find('[data-testid="todo-stats"]');
       expect(stats.text()).toContain('2 Aufgaben übrig');
 
-      // Eine abhaken
+      // Check off one
       const checkbox = wrapper.find('[data-testid^="todo-checkbox-"]');
       await checkbox.setValue(true);
 
@@ -188,13 +188,13 @@ describe('TodoApp.vue', () => {
       expect(stats.text()).toContain('1 Aufgabe übrig');
     });
 
-    it('sollte keine Statistiken anzeigen, wenn keine Todos vorhanden sind', () => {
+    it('should not display statistics if no todos are present', () => {
       expect(wrapper.find('[data-testid="todo-stats"]').exists()).toBe(false);
     });
   });
 
   describe('JSON Modal', () => {
-    it('sollte das Modal öffnen können', async () => {
+    it('should be able to open the modal', async () => {
       const jsonButton = wrapper.find('[data-testid="btn-import"]');
       await jsonButton.trigger('click');
 
@@ -202,21 +202,21 @@ describe('TodoApp.vue', () => {
       expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(true);
     });
 
-    it('sollte das Modal schließen können', async () => {
-      // Modal öffnen
+    it('should be able to close the modal', async () => {
+      // Open modal
       const jsonButton = wrapper.find('[data-testid="btn-import"]');
       await jsonButton.trigger('click');
 
       expect(wrapper.find('[data-testid="modal"]').exists()).toBe(true);
 
-      // Modal schließen
+      // Close modal
       const closeButton = wrapper.find('[data-testid="btn-close"]');
       await closeButton.trigger('click');
 
       expect(wrapper.find('[data-testid="modal"]').exists()).toBe(false);
     });
 
-    it('sollte JSON-Text in Todos konvertieren', async () => {
+    it('should convert JSON text to todos', async () => {
       const jsonButton = wrapper.find('[data-testid="btn-import"]');
       await jsonButton.trigger('click');
 
@@ -234,7 +234,7 @@ describe('TodoApp.vue', () => {
       expect(wrapper.find('[data-testid^="todo-text-"]').text()).toBe('Test Todo');
     });
 
-    it('sollte ungültiges JSON ablehnen', async () => {
+    it('should reject invalid JSON', async () => {
       const jsonButton = wrapper.find('[data-testid="btn-import"]');
       await jsonButton.trigger('click');
 
@@ -244,31 +244,31 @@ describe('TodoApp.vue', () => {
       const applyButton = wrapper.find('[data-testid="btn-apply"]');
       await applyButton.trigger('click');
 
-      // Modal sollte noch offen sein mit Fehlermeldung
+      // Modal should still be open with error message
       expect(wrapper.find('[data-testid="modal"]').exists()).toBe(true);
     });
   });
 
   describe('Props', () => {
-    it('sollte Props akzeptieren', () => {
+    it('should accept props', () => {
       const newWrapper = mount(TodoApp, {
         props: {
-          title: 'Meine Custom Aufgaben',
+          title: 'My Custom Tasks',
           storageKey: 'custom-todos'
         }
       });
 
-      expect(newWrapper.find('[data-testid="app-title"]').text()).toBe('Meine Custom Aufgaben');
+      expect(newWrapper.find('[data-testid="app-title"]').text()).toBe('My Custom Tasks');
       newWrapper.unmount();
     });
 
-    it('sollte Standard-Werte verwenden, wenn keine Props übergeben', () => {
+    it('should use default values when no props are passed', () => {
       const newWrapper = mount(TodoApp);
       expect(newWrapper.find('[data-testid="app-title"]').text()).toBe('Meine Aufgaben');
       newWrapper.unmount();
     });
 
-    it('sollte das lang-Prop akzeptieren und englische Texte anzeigen', () => {
+    it('should accept the lang prop and display English text', () => {
       const newWrapper = mount(TodoApp, {
         props: { lang: 'en' }
       });
@@ -280,19 +280,19 @@ describe('TodoApp.vue', () => {
       newWrapper.unmount();
     });
 
-    it('sollte das todosData-Prop verwenden', async () => {
+    it('should use the todosData prop', async () => {
       const testData = JSON.stringify([
         { id: 1, text: 'Test Todo', completed: false }
       ]);
       const newWrapper = mount(TodoApp, {
         props: { 
           todosData: testData,
-          title: 'Test Aufgaben',
+          title: 'Test Tasks',
           storageKey: 'test-todos'
         }
       });
       
-      // Warten auf asynchrone Initialisierung
+      // Wait for asynchronous initialization
       await new Promise(resolve => setTimeout(resolve, 100));
       
       expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
@@ -300,7 +300,7 @@ describe('TodoApp.vue', () => {
       newWrapper.unmount();
     });
 
-    it('sollte leeres todosData-Prop als leere Liste behandeln', () => {
+    it('should treat empty todosData prop as empty list', () => {
       const newWrapper = mount(TodoApp, {
         props: { todosData: '[]' }
       });
@@ -309,13 +309,13 @@ describe('TodoApp.vue', () => {
     });
   });
 
-  describe('i18n – Sprachumschalter', () => {
-    it('sollte standardmäßig Deutsch anzeigen', () => {
+  describe('i18n - Language Switcher', () => {
+    it('should display German by default', () => {
       expect(wrapper.find('[data-testid="btn-add"]').text()).toBe('Hinzufügen');
       expect(wrapper.find('[data-testid="btn-import"]').text()).toBe('JSON bearbeiten');
     });
 
-    it('sollte nach Klick auf Sprachumschalter Englisch anzeigen', async () => {
+    it('should display English after clicking language switch', async () => {
       const langBtn = wrapper.find('[data-testid="btn-lang"]');
       await langBtn.trigger('click');
 
@@ -325,7 +325,7 @@ describe('TodoApp.vue', () => {
       expect(filterButtons[0].text()).toBe('All');
     });
 
-    it('sollte nach zweimaligem Klick wieder Deutsch anzeigen', async () => {
+    it('should display German again after clicking twice', async () => {
       const langBtn = wrapper.find('[data-testid="btn-lang"]');
       await langBtn.trigger('click');
       await langBtn.trigger('click');
@@ -333,7 +333,7 @@ describe('TodoApp.vue', () => {
       expect(wrapper.find('[data-testid="btn-add"]').text()).toBe('Hinzufügen');
     });
 
-    it('sollte englische Statistiken anzeigen', async () => {
+    it('should display English statistics', async () => {
       const langBtn = wrapper.find('[data-testid="btn-lang"]');
       await langBtn.trigger('click');
 
@@ -345,7 +345,7 @@ describe('TodoApp.vue', () => {
       expect(stats.text()).toContain('1 task remaining');
     });
 
-    it('sollte englische Statistiken im Plural anzeigen', async () => {
+    it('should display English statistics in plural', async () => {
       const langBtn = wrapper.find('[data-testid="btn-lang"]');
       await langBtn.trigger('click');
 
@@ -361,9 +361,9 @@ describe('TodoApp.vue', () => {
   });
 
   describe('LocalStorage', () => {
-    it('sollte Todos in LocalStorage speichern', async () => {
+    it('should save todos to LocalStorage', async () => {
       const input = wrapper.find('[data-testid="todo-input"]');
-      await input.setValue('Persistente Aufgabe');
+      await input.setValue('Persistent Task');
       await wrapper.find('[data-testid="btn-add"]').trigger('click');
 
       const stored = localStorage.getItem('test-todos');
@@ -371,46 +371,46 @@ describe('TodoApp.vue', () => {
       
       const parsedData = JSON.parse(stored);
       expect(parsedData).toHaveLength(1);
-      expect(parsedData[0].text).toBe('Persistente Aufgabe');
+      expect(parsedData[0].text).toBe('Persistent Task');
     });
 
-    it('sollte Todos aus LocalStorage laden', async () => {
-      // Daten vorab in LocalStorage speichern
+    it('should load todos from LocalStorage', async () => {
+      // Save data to LocalStorage in advance
       const testData = [
-        { id: 1, text: 'Gespeicherte Aufgabe', completed: false }
+        { id: 1, text: 'Stored Task', completed: false }
       ];
       localStorage.setItem('test-todos', JSON.stringify(testData));
 
-      // Neue Komponente mounten
+      // Mount new component
       const newWrapper = mount(TodoApp, {
         props: {
-          title: 'Test Aufgaben',
+          title: 'Test Tasks',
           storageKey: 'test-todos',
-          todosData: '[]' // Leeres todosData, damit LocalStorage geladen wird
+          todosData: '[]' // Empty todosData so LocalStorage will be loaded
         }
       });
 
-      // Warten auf asynchrone Initialisierung
+      // Wait for asynchronous initialization
       await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
-      expect(newWrapper.find('[data-testid^="todo-text-"]').text()).toBe('Gespeicherte Aufgabe');
+      expect(newWrapper.find('[data-testid^="todo-text-"]').text()).toBe('Stored Task');
       newWrapper.unmount();
     });
 
-    it('sollte fehlerhafte LocalStorage-Daten ignorieren', async () => {
-      // Ungültige Daten in LocalStorage speichern
+    it('should ignore invalid LocalStorage data', async () => {
+      // Save invalid data to LocalStorage
       localStorage.setItem('test-todos', 'invalid json');
 
-      // Neue Komponente mounten - sollte nicht crashen
+      // Mount new component - should not crash
       const newWrapper = mount(TodoApp, {
         props: {
-          title: 'Test Aufgaben',
+          title: 'Test Tasks',
           storageKey: 'test-todos'
         }
       });
 
-      // Warten auf asynchrone Initialisierung
+      // Wait for asynchronous initialization
       await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(0);

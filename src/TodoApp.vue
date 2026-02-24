@@ -114,13 +114,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:todosData']);
 
-// Sprach-Composable verwenden
+// Use language composable
 const { currentLang, toggleLang } = useLanguage(props.lang);
 
 /**
- * Übersetzungs-Funktion
- * @param {string} key - Schlüssel für die Übersetzung
- * @returns {string|function} Übersetzungsstring oder Funktion
+ * Translation function
+ * @param {string} key - Key for translation
+ * @returns {string|function} Translation string or function
  */
 const t = (key) => {
   const locale = translations[currentLang.value] || translations['de'];
@@ -131,25 +131,25 @@ const t = (key) => {
 const appTitle = computed(() => props.title || t('title'));
 
 /**
- * Reaktive Referenz für den neuen Todo-Text
+ * Reactive reference for the new todo text
  * @type {import('vue').Ref<string>}
  */
 const newTodo = ref('');
 
 /**
- * Reaktive Referenz für die Todo-Liste
+ * Reactive reference for the todo list
  * @type {import('vue').Ref<Array<{id: number, text: string, completed: boolean}>>}
  */
 const todos = ref([]);
 
 /**
- * Aktueller Filterstatus
+ * Current filter status
  * @type {import('vue').Ref<'all'|'active'|'completed'>}
  */
 const currentFilter = ref('all');
 
 /**
- * Berechnete Filteroptionen basierend auf der aktuellen Sprache
+ * Computed filter options based on the current language
  * @returns {Array<{label: string, value: string}>}
  */
 const filters = computed(() => [
@@ -159,7 +159,7 @@ const filters = computed(() => [
 ]);
 
 /**
- * Berechnete gefilterte Todo-Liste basierend auf dem aktuellen Filter
+ * Computed filtered todo list based on the current filter
  * @returns {Array<{id: number, text: string, completed: boolean}>}
  */
 const filteredTodos = computed(() => {
@@ -174,7 +174,7 @@ const filteredTodos = computed(() => {
 });
 
 /**
- * Anzahl der unerledigten Aufgaben
+ * Number of incomplete tasks
  * @returns {number}
  */
 const remainingCount = computed(() => {
@@ -182,7 +182,7 @@ const remainingCount = computed(() => {
 });
 
 /**
- * Fügt eine neue Aufgabe zur Todo-Liste hinzu
+ * Adds a new task to the todo list
  */
 const addTodo = () => {
   const text = newTodo.value.trim();
@@ -262,8 +262,8 @@ const copyJsonToClipboard = async () => {
 };
 
 /**
- * Entfernt eine Aufgabe aus der Todo-Liste nach Bestätigung
- * @param {number} id - ID der zu entfernenden Aufgabe
+ * Removes a task from the todo list after confirmation
+ * @param {number} id - ID of the task to remove
  */
 const removeTodo = (id) => {
   if (window.confirm(t('confirmDelete'))) {
@@ -272,8 +272,8 @@ const removeTodo = (id) => {
 };
 
 /**
- * Setzt den erledigt-Status einer Aufgabe um
- * @param {number} id - ID der Aufgabe
+ * Toggles the completion status of a task
+ * @param {number} id - ID of the task
  */
 const toggleTodo = (id) => {
   const todo = todos.value.find(todo => todo.id === id);
@@ -283,14 +283,14 @@ const toggleTodo = (id) => {
 };
 
 /**
- * Speichert die Todo-Liste im LocalStorage
+ * Saves the todo list to LocalStorage
  */
 const saveTodos = () => {
   localStorage.setItem(props.storageKey, JSON.stringify(todos.value));
 };
 
 /**
- * Lädt die Todo-Liste aus dem LocalStorage
+ * Loads the todo list from LocalStorage
  */
 const loadTodos = () => {
   const stored = localStorage.getItem(props.storageKey);
@@ -298,7 +298,7 @@ const loadTodos = () => {
     try {
       todos.value = JSON.parse(stored);
     } catch (e) {
-      console.error('Fehler beim Laden der Todos:', e);
+      console.error('Error loading todos:', e);
     }
   }
 };
@@ -311,7 +311,7 @@ onMounted(() => {
       loadTodos();
     }
   } catch (error) {
-    console.error('Fehler beim Laden der Todos:', error);
+    console.error('Error loading todos:', error);
     todos.value = [];
   }
 });
