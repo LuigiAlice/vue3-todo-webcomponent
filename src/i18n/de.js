@@ -19,4 +19,6 @@ export default {
   successCopied: 'JSON kopiert.',
   errorCopy: 'Fehler beim Kopieren in die Zwischenablage.',
   successApplied: (count) => `Angewendet: ${count} Todo(s) gesetzt.`,
+  toggleTodo: (text) => `Aufgabe "${text}" umschalten`,
+  deleteTodo: (text) => `Aufgabe "${text}" löschen`
 };

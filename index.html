@@ -8,12 +8,13 @@
 <body>
 <!-- Sprache über das lang-Attribut setzen: lang="de" (Standard) oder lang="en" -->
 <todo-app id="myTodo" lang="de"></todo-app>
-<script>
+<script type="module">
+  import './src/todo-component.js';
+  
   const todo = document.getElementById('myTodo');
   todo.addEventListener('update:todosData', ev => {
     console.log('Todos:', JSON.parse(ev.detail));
   });
 </script>
-  <script type="module" src="./dist/todo-component.mjs"></script>
 </body>
 </html>

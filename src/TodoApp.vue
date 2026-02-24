@@ -50,9 +50,15 @@
             @change="toggleTodo(todo.id)"
             class="todo-checkbox"
             :data-testid="`todo-checkbox-${todo.id}`"
+            :aria-label="t('toggleTodo')(todo.text)"
         />
         <span class="todo-text" :data-testid="`todo-text-${todo.id}`">{{ todo.text }}</span>
-        <button @click="removeTodo(todo.id)" class="btn btn-delete" :data-testid="`btn-delete-${todo.id}`">
+        <button 
+          @click="removeTodo(todo.id)" 
+          class="btn btn-delete" 
+          :data-testid="`btn-delete-${todo.id}`"
+          :aria-label="t('deleteTodo')(todo.text)"
+        >
           ✕
         </button>
       </li>
@@ -80,6 +86,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useLanguage } from './composables/useLanguage.js';
 import de from './i18n/de.js';
 import en from './i18n/en.js';
 
@@ -107,31 +114,54 @@ const props = defineProps({
 
 const emit = defineEmits(['update:todosData']);
 
-// Language state – initialized from prop, can be toggled interactively
-const currentLang = ref(props.lang);
+// Sprach-Composable verwenden
+const { currentLang, toggleLang } = useLanguage(props.lang);
 
+/**
+ * Übersetzungs-Funktion
+ * @param {string} key - Schlüssel für die Übersetzung
+ * @returns {string|function} Übersetzungsstring oder Funktion
+ */
 const t = (key) => {
   const locale = translations[currentLang.value] || translations['de'];
   return locale[key] ?? key;
 };
 
-const toggleLang = () => {
-  currentLang.value = currentLang.value === 'de' ? 'en' : 'de';
-};
-
 // Computed title: use prop if provided, otherwise fall back to translation
 const appTitle = computed(() => props.title || t('title'));
 
+/**
+ * Reaktive Referenz für den neuen Todo-Text
+ * @type {import('vue').Ref<string>}
+ */
 const newTodo = ref('');
+
+/**
+ * Reaktive Referenz für die Todo-Liste
+ * @type {import('vue').Ref<Array<{id: number, text: string, completed: boolean}>>}
+ */
 const todos = ref([]);
+
+/**
+ * Aktueller Filterstatus
+ * @type {import('vue').Ref<'all'|'active'|'completed'>}
+ */
 const currentFilter = ref('all');
 
+/**
+ * Berechnete Filteroptionen basierend auf der aktuellen Sprache
+ * @returns {Array<{label: string, value: string}>}
+ */
 const filters = computed(() => [
   { label: t('filterAll'), value: 'all' },
   { label: t('filterActive'), value: 'active' },
   { label: t('filterCompleted'), value: 'completed' }
 ]);
 
+/**
+ * Berechnete gefilterte Todo-Liste basierend auf dem aktuellen Filter
+ * @returns {Array<{id: number, text: string, completed: boolean}>}
+ */
 const filteredTodos = computed(() => {
   switch (currentFilter.value) {
     case 'active':
@@ -143,10 +173,17 @@ const filteredTodos = computed(() => {
   }
 });
 
+/**
+ * Anzahl der unerledigten Aufgaben
+ * @returns {number}
+ */
 const remainingCount = computed(() => {
   return todos.value.filter(todo => !todo.completed).length;
 });
 
+/**
+ * Fügt eine neue Aufgabe zur Todo-Liste hinzu
+ */
 const addTodo = () => {
   const text = newTodo.value.trim();
   if (text) {
@@ -224,12 +261,20 @@ const copyJsonToClipboard = async () => {
   }
 };
 
+/**
+ * Entfernt eine Aufgabe aus der Todo-Liste nach Bestätigung
+ * @param {number} id - ID der zu entfernenden Aufgabe
+ */
 const removeTodo = (id) => {
   if (window.confirm(t('confirmDelete'))) {
     todos.value = todos.value.filter(todo => todo.id !== id);
   }
 };
 
+/**
+ * Setzt den erledigt-Status einer Aufgabe um
+ * @param {number} id - ID der Aufgabe
+ */
 const toggleTodo = (id) => {
   const todo = todos.value.find(todo => todo.id === id);
   if (todo) {
@@ -237,10 +282,16 @@ const toggleTodo = (id) => {
   }
 };
 
+/**
+ * Speichert die Todo-Liste im LocalStorage
+ */
 const saveTodos = () => {
   localStorage.setItem(props.storageKey, JSON.stringify(todos.value));
 };
 
+/**
+ * Lädt die Todo-Liste aus dem LocalStorage
+ */
 const loadTodos = () => {
   const stored = localStorage.getItem(props.storageKey);
   if (stored) {
@@ -259,7 +310,8 @@ onMounted(() => {
     } else {
       loadTodos();
     }
-  } catch {
+  } catch (error) {
+    console.error('Fehler beim Laden der Todos:', error);
     todos.value = [];
   }
 });

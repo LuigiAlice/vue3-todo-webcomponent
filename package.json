@@ -14,6 +14,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.3",
+    "@vitest/coverage-v8": "^1.0.0",
     "@vitest/ui": "^1.0.0",
     "jsdom": "^23.0.0",
     "rollup-plugin-terser": "^7.0.2",

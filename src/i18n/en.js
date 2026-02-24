@@ -19,4 +19,6 @@ export default {
   successCopied: 'JSON copied.',
   errorCopy: 'Error copying to clipboard.',
   successApplied: (count) => `Applied: ${count} todo(s) set.`,
+  toggleTodo: (text) => `Toggle task "${text}"`,
+  deleteTodo: (text) => `Delete task "${text}"`
 };
