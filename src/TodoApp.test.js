@@ -279,6 +279,34 @@ describe('TodoApp.vue', () => {
       expect(filterButtons[2].text()).toBe('Completed');
       newWrapper.unmount();
     });
+
+    it('sollte das todosData-Prop verwenden', async () => {
+      const testData = JSON.stringify([
+        { id: 1, text: 'Test Todo', completed: false }
+      ]);
+      const newWrapper = mount(TodoApp, {
+        props: { 
+          todosData: testData,
+          title: 'Test Aufgaben',
+          storageKey: 'test-todos'
+        }
+      });
+      
+      // Warten auf asynchrone Initialisierung
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
+      expect(newWrapper.find('[data-testid^="todo-text-"]').text()).toBe('Test Todo');
+      newWrapper.unmount();
+    });
+
+    it('sollte leeres todosData-Prop als leere Liste behandeln', () => {
+      const newWrapper = mount(TodoApp, {
+        props: { todosData: '[]' }
+      });
+      expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(0);
+      newWrapper.unmount();
+    });
   });
 
   describe('i18n – Sprachumschalter', () => {
@@ -344,6 +372,49 @@ describe('TodoApp.vue', () => {
       const parsedData = JSON.parse(stored);
       expect(parsedData).toHaveLength(1);
       expect(parsedData[0].text).toBe('Persistente Aufgabe');
+    });
+
+    it('sollte Todos aus LocalStorage laden', async () => {
+      // Daten vorab in LocalStorage speichern
+      const testData = [
+        { id: 1, text: 'Gespeicherte Aufgabe', completed: false }
+      ];
+      localStorage.setItem('test-todos', JSON.stringify(testData));
+
+      // Neue Komponente mounten
+      const newWrapper = mount(TodoApp, {
+        props: {
+          title: 'Test Aufgaben',
+          storageKey: 'test-todos',
+          todosData: '[]' // Leeres todosData, damit LocalStorage geladen wird
+        }
+      });
+
+      // Warten auf asynchrone Initialisierung
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(1);
+      expect(newWrapper.find('[data-testid^="todo-text-"]').text()).toBe('Gespeicherte Aufgabe');
+      newWrapper.unmount();
+    });
+
+    it('sollte fehlerhafte LocalStorage-Daten ignorieren', async () => {
+      // Ungültige Daten in LocalStorage speichern
+      localStorage.setItem('test-todos', 'invalid json');
+
+      // Neue Komponente mounten - sollte nicht crashen
+      const newWrapper = mount(TodoApp, {
+        props: {
+          title: 'Test Aufgaben',
+          storageKey: 'test-todos'
+        }
+      });
+
+      // Warten auf asynchrone Initialisierung
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(newWrapper.findAll('[data-testid^="todo-item-"]')).toHaveLength(0);
+      newWrapper.unmount();
     });
   });
 });
